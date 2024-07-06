@@ -1,89 +1,69 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const cells = document.querySelectorAll('.cell');
-    const statusDisplay = document.getElementById('status');
-    const restartButton = document.getElementById('restart-btn');
+// Define players and initial state
+let currentPlayer = 'X';
+let moves = 0;
+let gameActive = true;
+const winningConditions = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+];
 
-    let currentPlayer = 'X';
-    let gameActive = true;
-    let gameState = ['', '', '', '', '', '', '', '', ''];
+// Cell elements
+const cells = document.querySelectorAll('.cell');
 
-    const winningConditions = [
-        [0, 1, 2],
-        [3, 4, 5],
-        [6, 7, 8],
-        [0, 3, 6],
-        [1, 4, 7],
-        [2, 5, 8],
-        [0, 4, 8],
-        [2, 4, 6]
-    ];
+// Status display
+const statusDisplay = document.getElementById('status');
 
-    function handleCellClick(clickedCellEvent) {
-        const clickedCell = clickedCellEvent.target;
-        const clickedCellIndex = parseInt(
-            clickedCell.getAttribute('data-cell-index')
-        );
+// Handle a player's move
+function handleMove(cellIndex) {
+    const cell = cells[cellIndex];
 
-        if (gameState[clickedCellIndex] !== '' || !gameActive) {
-            return;
-        }
-
-        handleCellPlayed(clickedCell, clickedCellIndex);
-        handleResultValidation();
+    // Check if cell is already played or game is over
+    if (cell.textContent !== '' || !gameActive) {
+        return;
     }
 
-    function handleCellPlayed(clickedCell, clickedCellIndex) {
-        gameState[clickedCellIndex] = currentPlayer;
-        clickedCell.textContent = currentPlayer;
-    }
+    // Update cell content and current player
+    cell.textContent = currentPlayer;
+    moves++;
 
-    function handleResultValidation() {
-        let roundWon = false;
-        for (let i = 0; i < winningConditions.length; i++) {
-            const winCondition = winningConditions[i];
-            let a = gameState[winCondition[0]];
-            let b = gameState[winCondition[1]];
-            let c = gameState[winCondition[2]];
-            if (a === '' || b === '' || c === '') {
-                continue;
-            }
-            if (a === b && b === c) {
-                roundWon = true;
-                break;
-            }
-        }
-
-        if (roundWon) {
-            statusDisplay.innerHTML = `Player ${currentPlayer} wins!`;
-            gameActive = false;
-            return;
-        }
-
-        let roundDraw = !gameState.includes('');
-        if (roundDraw) {
-            statusDisplay.innerHTML = 'It\'s a draw!';
-            gameActive = false;
-            return;
-        }
-
+    // Check for a win or draw
+    if (checkWin()) {
+        statusDisplay.textContent = `Player ${currentPlayer} wins!`;
+        gameActive = false;
+    } else if (moves === 9) {
+        statusDisplay.textContent = 'It\'s a draw!';
+        gameActive = false;
+    } else {
+        // Switch turns
         currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-        statusDisplay.innerHTML = `Player ${currentPlayer}'s turn`;
+        statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
     }
+}
 
-    function handleRestartGame() {
-        currentPlayer = 'X';
-        gameActive = true;
-        gameState = ['', '', '', '', '', '', '', '', ''];
-        statusDisplay.innerHTML = `Player ${currentPlayer}'s turn`;
-
-        cells.forEach(cell => {
-            cell.textContent = '';
+// Check if there's a winner
+function checkWin() {
+    return winningConditions.some(condition => {
+        return condition.every(index => {
+            return cells[index].textContent === currentPlayer;
         });
-    }
-
-    cells.forEach(cell => {
-        cell.addEventListener('click', handleCellClick);
     });
+}
 
-    restartButton.addEventListener('click', handleRestartGame);
-});
+// Reset the game
+function resetGame() {
+    currentPlayer = 'X';
+    moves = 0;
+    gameActive = true;
+    statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
+
+    // Clear all cell content
+    cells.forEach(cell => {
+        cell.textContent = '';
+    });
+}
